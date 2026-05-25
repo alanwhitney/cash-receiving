@@ -284,6 +284,8 @@ export function ItemsTab({
   );
 }
 
+const NO_DEPT = "none";
+
 function ItemFormFields({
   departments,
   defaults,
@@ -291,138 +293,116 @@ function ItemFormFields({
   departments: Department[];
   defaults?: Item;
 }) {
-  const [previewMargin, setPreviewMargin] = useState(() =>
-    defaults
-      ? calcMargin({
-          caseCost: defaults.case_cost,
-          caseSize: defaults.case_size,
-          caseDiscount: defaults.case_discount,
-          unitRetail: defaults.unit_retail,
-        })
-      : 0
-  );
+  const [caseCost, setCaseCost] = useState(defaults?.case_cost ?? 0);
+  const [caseSize, setCaseSize] = useState(defaults?.case_size ?? 1);
+  const [caseDiscount, setCaseDiscount] = useState(defaults?.case_discount ?? 0);
+  const [unitRetail, setUnitRetail] = useState(defaults?.unit_retail ?? 0);
+  const [departmentId, setDepartmentId] = useState(defaults?.department_id ?? NO_DEPT);
 
-  function recalc(form: HTMLFormElement) {
-    const caseCost = parseFloat(
-      (form.querySelector('[name="case_cost"]') as HTMLInputElement)?.value
-    );
-    const caseSize = parseInt(
-      (form.querySelector('[name="case_size"]') as HTMLInputElement)?.value
-    );
-    const caseDiscount = parseFloat(
-      (form.querySelector('[name="case_discount"]') as HTMLInputElement)?.value
-    ) || 0;
-    const unitRetail = parseFloat(
-      (form.querySelector('[name="unit_retail"]') as HTMLInputElement)?.value
-    );
-    if (!isNaN(caseCost) && !isNaN(caseSize) && !isNaN(unitRetail)) {
-      setPreviewMargin(calcMargin({ caseCost, caseSize, caseDiscount, unitRetail }));
-    }
-  }
+  const previewMargin = calcMargin({ caseCost, caseSize, caseDiscount, unitRetail });
 
   return (
-    <div
-      onChange={(e) => recalc((e.currentTarget as HTMLElement).closest("form")!)}
-    >
-      <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2 space-y-2">
-          <Label htmlFor="name">Name *</Label>
-          <Input
-            id="name"
-            name="name"
-            defaultValue={defaults?.name}
-            required
-            placeholder="Product name"
-          />
-        </div>
-        <div className="col-span-2 space-y-2">
-          <Label htmlFor="upc">UPC *</Label>
-          <Input
-            id="upc"
-            name="upc"
-            defaultValue={defaults?.upc}
-            required
-            placeholder="012345678901"
-            inputMode="numeric"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="case_cost">Case Cost *</Label>
-          <Input
-            id="case_cost"
-            name="case_cost"
-            type="number"
-            step="0.01"
-            min="0"
-            defaultValue={defaults?.case_cost ?? ""}
-            required
-            placeholder="0.00"
-            inputMode="decimal"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="case_size">Case Size *</Label>
-          <Input
-            id="case_size"
-            name="case_size"
-            type="number"
-            min="1"
-            step="1"
-            defaultValue={defaults?.case_size ?? ""}
-            required
-            placeholder="12"
-            inputMode="numeric"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="case_discount">Discount %</Label>
-          <Input
-            id="case_discount"
-            name="case_discount"
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
-            defaultValue={defaults?.case_discount ?? "0"}
-            placeholder="0"
-            inputMode="decimal"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="unit_retail">Unit Retail *</Label>
-          <Input
-            id="unit_retail"
-            name="unit_retail"
-            type="number"
-            step="0.01"
-            min="0"
-            defaultValue={defaults?.unit_retail ?? ""}
-            required
-            placeholder="0.00"
-            inputMode="decimal"
-          />
-        </div>
-        <div className="col-span-2 space-y-2">
-          <Label htmlFor="department_id">Department</Label>
-          <Select
-            name="department_id"
-            defaultValue={defaults?.department_id ?? ""}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select department..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">No department</SelectItem>
-              {departments.map((d) => (
-                <SelectItem key={d.id} value={d.id}>
-                  {d.name} (target: {d.target_margin}%)
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="grid grid-cols-2 gap-3">
+      <div className="col-span-2 space-y-2">
+        <Label htmlFor="name">Name *</Label>
+        <Input
+          id="name"
+          name="name"
+          defaultValue={defaults?.name}
+          required
+          placeholder="Product name"
+        />
       </div>
-      <div className="mt-3 p-3 rounded-md bg-muted text-sm">
+      <div className="col-span-2 space-y-2">
+        <Label htmlFor="upc">UPC *</Label>
+        <Input
+          id="upc"
+          name="upc"
+          defaultValue={defaults?.upc}
+          required
+          placeholder="012345678901"
+          inputMode="numeric"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="case_cost">Case Cost *</Label>
+        <Input
+          id="case_cost"
+          name="case_cost"
+          type="number"
+          step="0.01"
+          min="0"
+          value={caseCost || ""}
+          onChange={(e) => setCaseCost(parseFloat(e.target.value) || 0)}
+          required
+          placeholder="0.00"
+          inputMode="decimal"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="case_size">Case Size *</Label>
+        <Input
+          id="case_size"
+          name="case_size"
+          type="number"
+          min="1"
+          step="1"
+          value={caseSize || ""}
+          onChange={(e) => setCaseSize(parseInt(e.target.value) || 1)}
+          required
+          placeholder="12"
+          inputMode="numeric"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="case_discount">Discount %</Label>
+        <Input
+          id="case_discount"
+          name="case_discount"
+          type="number"
+          step="0.01"
+          min="0"
+          max="100"
+          value={caseDiscount || ""}
+          onChange={(e) => setCaseDiscount(parseFloat(e.target.value) || 0)}
+          placeholder="0"
+          inputMode="decimal"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="unit_retail">Unit Retail *</Label>
+        <Input
+          id="unit_retail"
+          name="unit_retail"
+          type="number"
+          step="0.01"
+          min="0"
+          value={unitRetail || ""}
+          onChange={(e) => setUnitRetail(parseFloat(e.target.value) || 0)}
+          required
+          placeholder="0.00"
+          inputMode="decimal"
+        />
+      </div>
+      <div className="col-span-2 space-y-2">
+        <Label>Department</Label>
+        {/* Hidden input so FormData captures the department value */}
+        <input type="hidden" name="department_id" value={departmentId === NO_DEPT ? "" : departmentId} />
+        <Select value={departmentId} onValueChange={setDepartmentId}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select department..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NO_DEPT}>No department</SelectItem>
+            {departments.map((d) => (
+              <SelectItem key={d.id} value={d.id}>
+                {d.name} (target: {d.target_margin}%)
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="col-span-2 p-3 rounded-md bg-muted text-sm">
         <span className="text-muted-foreground">Margin preview: </span>
         <span
           className={
