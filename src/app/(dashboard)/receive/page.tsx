@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ChevronRight, PackagePlus } from "lucide-react";
 import { StartSessionClient } from "./start-session-client";
 import type { ReceiveSession } from "@/types/database";
@@ -11,17 +12,18 @@ type SessionWithVendor = ReceiveSession & { vendors: { name: string } };
 export default async function ReceivePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   const [{ data: vendors }, { data: sessions }] = await Promise.all([
     supabase
       .from("vendors")
       .select("id, name")
-      .eq("user_id", user!.id)
+      .eq("user_id", user.id)
       .order("name"),
     supabase
       .from("receive_sessions")
       .select("*, vendors(name)")
-      .eq("user_id", user!.id)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(20) as unknown as Promise<{ data: SessionWithVendor[] | null }>,
   ]);

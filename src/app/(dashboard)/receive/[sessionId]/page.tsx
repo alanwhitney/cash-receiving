@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ReceiveSessionClient } from "./receive-session-client";
 
 export default async function ReceiveSessionPage({
@@ -10,12 +10,13 @@ export default async function ReceiveSessionPage({
   const { sessionId } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   const { data: session } = await supabase
     .from("receive_sessions")
     .select("*, vendors(name)")
     .eq("id", sessionId)
-    .eq("user_id", user!.id)
+    .eq("user_id", user.id)
     .single();
 
   if (!session) notFound();

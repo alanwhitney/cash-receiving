@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ContactsTab } from "./contacts-tab";
 import { ItemsTab } from "./items-tab";
@@ -13,12 +13,13 @@ export default async function VendorDetailPage({
   const { id } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   const { data: vendor } = await supabase
     .from("vendors")
     .select("*")
     .eq("id", id)
-    .eq("user_id", user!.id)
+    .eq("user_id", user.id)
     .single();
 
   if (!vendor) notFound();
@@ -38,7 +39,7 @@ export default async function VendorDetailPage({
       supabase
         .from("departments")
         .select("*")
-        .eq("user_id", user!.id)
+        .eq("user_id", user.id)
         .order("name"),
     ]);
 

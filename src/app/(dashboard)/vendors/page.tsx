@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Store, ChevronRight, Plus } from "lucide-react";
 import { AddVendorDialog } from "./add-vendor-dialog";
 import type { Vendor } from "@/types/database";
@@ -14,11 +15,12 @@ type VendorWithCounts = Vendor & {
 export default async function VendorsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   const { data: vendors } = await supabase
     .from("vendors")
     .select("*, items(count), contacts(count)")
-    .eq("user_id", user!.id)
+    .eq("user_id", user.id)
     .order("name") as unknown as { data: VendorWithCounts[] | null };
 
   return (
