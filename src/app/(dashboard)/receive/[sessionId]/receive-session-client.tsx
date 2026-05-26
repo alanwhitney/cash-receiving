@@ -36,6 +36,7 @@ import { toast } from "@/components/ui/use-toast";
 import { calcMargin, calcUnitCost } from "@/lib/margin";
 import { formatCurrency } from "@/lib/utils";
 import { completeUpc } from "@/lib/upc";
+import { UpcBarcode } from "@/components/ui/upc-barcode";
 import type { ReceiveSession, ReceiveLine, Item, Department } from "@/types/database";
 
 type ItemWithDept = Item & { departments: Department | null };
@@ -221,6 +222,17 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
     (l) => l.case_cost_override !== null
   );
 
+  const sessionTotal = lines.reduce((sum, line) => {
+    const item = line.items;
+    const effectiveCaseCost =
+      (line.case_cost_override ?? item.case_cost) -
+      (line.case_discount_override ?? item.case_discount);
+    const depositPerCase = item.case_size * (item.bottle_deposit ?? 0);
+    return sum + line.cases_received * (effectiveCaseCost + depositPerCase);
+  }, 0);
+
+  const totalCases = lines.reduce((sum, l) => sum + l.cases_received, 0);
+
   return (
     <div className="p-4 md:p-6 max-w-2xl mx-auto">
       {/* Header */}
@@ -370,19 +382,22 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">{item.upc}</p>
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-sm text-muted-foreground">
                         <span>
                           {line.cases_received} case{line.cases_received !== 1 ? "s" : ""}
                         </span>
-                        <span>
-                          Cost: {formatCurrency(effectiveCost)}
-                        </span>
+                        <span>Cost: {formatCurrency(effectiveCost)}</span>
                         {effectiveDiscount > 0 && (
                           <span>Disc: {formatCurrency(effectiveDiscount)}</span>
                         )}
                         <span>Unit: {formatCurrency(unitCost)}</span>
                         <span>Retail: {formatCurrency(item.unit_retail)}</span>
+                        {(item.bottle_deposit ?? 0) > 0 && (
+                          <span>Dep: {formatCurrency(item.bottle_deposit ?? 0)}</span>
+                        )}
+                      </div>
+                      <div className="mt-2">
+                        <UpcBarcode upc={item.upc} />
                       </div>
                     </div>
                     {!isCompleted && (
@@ -412,6 +427,20 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
           })
         )}
       </div>
+
+      {/* Session total */}
+      {lines.length > 0 && (
+        <Card className="mb-4">
+          <CardContent className="p-4 flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
+              {lines.length} item{lines.length !== 1 ? "s" : ""} · {totalCases} case{totalCases !== 1 ? "s" : ""}
+            </span>
+            <span className="text-lg font-semibold">
+              Total: {formatCurrency(sessionTotal)}
+            </span>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Complete button */}
       {!isCompleted && lines.length > 0 && (

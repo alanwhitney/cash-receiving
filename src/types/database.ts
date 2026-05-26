@@ -119,6 +119,7 @@ export interface Database {
           case_size: number;
           case_discount: number;
           unit_retail: number;
+          bottle_deposit: number;
           created_at: string;
           updated_at: string;
         };
@@ -132,6 +133,7 @@ export interface Database {
           case_size?: number;
           case_discount?: number;
           unit_retail?: number;
+          bottle_deposit?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -145,6 +147,7 @@ export interface Database {
           case_size?: number;
           case_discount?: number;
           unit_retail?: number;
+          bottle_deposit?: number;
           created_at?: string;
           updated_at?: string;
         };

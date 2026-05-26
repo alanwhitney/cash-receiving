@@ -10,6 +10,7 @@ type ParsedItem = {
   case_size: number;
   case_discount: number;
   unit_retail: number;
+  bottle_deposit: number;
   department_id: string | null;
 };
 
@@ -20,6 +21,7 @@ function parseItemFormData(formData: FormData): { error: string } | ParsedItem {
   const caseSize = parseInt(formData.get("case_size") as string);
   const caseDiscount = parseFloat(formData.get("case_discount") as string) || 0;
   const unitRetail = parseFloat(formData.get("unit_retail") as string);
+  const bottleDeposit = parseFloat(formData.get("bottle_deposit") as string) || 0;
   const departmentId = formData.get("department_id") as string;
 
   if (!name?.trim()) return { error: "Name is required" };
@@ -35,6 +37,7 @@ function parseItemFormData(formData: FormData): { error: string } | ParsedItem {
     case_size: caseSize,
     case_discount: caseDiscount,
     unit_retail: unitRetail,
+    bottle_deposit: bottleDeposit,
     department_id: departmentId || null,
   };
 }

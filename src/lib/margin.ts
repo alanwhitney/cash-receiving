@@ -3,6 +3,7 @@ export interface MarginInputs {
   caseSize: number;
   caseDiscount: number;
   unitRetail: number;
+  bottleDeposit?: number;
 }
 
 export function calcUnitCost(inputs: MarginInputs): number {

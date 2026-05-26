@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Package, Pencil, Trash2, History } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, History, Barcode } from "lucide-react";
 import { createItem, updateItem, deleteItem } from "@/app/actions/items";
 import { toast } from "@/components/ui/use-toast";
 import { calcMargin, calcUnitCost } from "@/lib/margin";
@@ -28,6 +28,7 @@ import { formatCurrency } from "@/lib/utils";
 import { completeUpc } from "@/lib/upc";
 import type { Department, Item } from "@/types/database";
 import { PriceHistoryDialog } from "./price-history-dialog";
+import { UpcBarcode } from "@/components/ui/upc-barcode";
 
 type ItemWithDept = Item & { departments: Department | null };
 
@@ -46,6 +47,7 @@ function calcMarginLib(item: Item) {
     caseSize: item.case_size,
     caseDiscount: item.case_discount,
     unitRetail: item.unit_retail,
+    bottleDeposit: item.bottle_deposit,
   });
 }
 
@@ -64,6 +66,7 @@ export function ItemsTab({
   const [historyItem, setHistoryItem] = useState<Item | null>(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [showBarcodes, setShowBarcodes] = useState(false);
 
   const filtered = items.filter(
     (i) =>
@@ -124,6 +127,14 @@ export function ItemsTab({
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1"
         />
+        <Button
+          size="sm"
+          variant={showBarcodes ? "secondary" : "outline"}
+          onClick={() => setShowBarcodes((v) => !v)}
+          title="Toggle barcodes"
+        >
+          <Barcode className="h-4 w-4" />
+        </Button>
         <Button size="sm" onClick={() => setAddOpen(true)}>
           <Plus className="h-4 w-4" />
           <span className="hidden sm:inline">Add Item</span>
@@ -176,7 +187,15 @@ export function ItemsTab({
                         )}
                         <span>Unit cost: {formatCurrency(unitCost)}</span>
                         <span>Retail: {formatCurrency(item.unit_retail)}</span>
+                        {item.bottle_deposit > 0 && (
+                          <span>Dep: {formatCurrency(item.bottle_deposit)}</span>
+                        )}
                       </div>
+                      {showBarcodes && (
+                        <div className="mt-2">
+                          <UpcBarcode upc={item.upc} />
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <Button
@@ -298,6 +317,7 @@ function ItemFormFields({
   const [caseSize, setCaseSize] = useState(defaults?.case_size ?? 1);
   const [caseDiscount, setCaseDiscount] = useState(defaults?.case_discount ?? 0);
   const [unitRetail, setUnitRetail] = useState(defaults?.unit_retail ?? 0);
+  const [bottleDeposit, setBottleDeposit] = useState(defaults?.bottle_deposit ?? 0);
   const [departmentId, setDepartmentId] = useState(defaults?.department_id ?? NO_DEPT);
 
   const previewMargin = calcMargin({ caseCost, caseSize, caseDiscount, unitRetail });
@@ -384,6 +404,20 @@ function ItemFormFields({
           value={unitRetail || ""}
           onChange={(e) => setUnitRetail(parseFloat(e.target.value) || 0)}
           required
+          placeholder="0.00"
+          inputMode="decimal"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="bottle_deposit">Bottle Deposit</Label>
+        <Input
+          id="bottle_deposit"
+          name="bottle_deposit"
+          type="number"
+          step="0.01"
+          min="0"
+          value={bottleDeposit || ""}
+          onChange={(e) => setBottleDeposit(parseFloat(e.target.value) || 0)}
           placeholder="0.00"
           inputMode="decimal"
         />
