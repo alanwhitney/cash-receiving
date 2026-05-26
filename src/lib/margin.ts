@@ -8,7 +8,7 @@ export interface MarginInputs {
 export function calcUnitCost(inputs: MarginInputs): number {
   const { caseCost, caseSize, caseDiscount } = inputs;
   if (caseSize <= 0) return 0;
-  const netCaseCost = caseCost * (1 - caseDiscount / 100);
+  const netCaseCost = caseCost - caseDiscount;
   return netCaseCost / caseSize;
 }
 

@@ -25,6 +25,7 @@ import { createItem, updateItem, deleteItem } from "@/app/actions/items";
 import { toast } from "@/components/ui/use-toast";
 import { calcMargin, calcUnitCost } from "@/lib/margin";
 import { formatCurrency } from "@/lib/utils";
+import { completeUpc } from "@/lib/upc";
 import type { Department, Item } from "@/types/database";
 import { PriceHistoryDialog } from "./price-history-dialog";
 
@@ -171,7 +172,7 @@ export function ItemsTab({
                         <span>Case cost: {formatCurrency(item.case_cost)}</span>
                         <span>Pack: {item.case_size}</span>
                         {item.case_discount > 0 && (
-                          <span>Disc: {item.case_discount}%</span>
+                          <span>Disc: {formatCurrency(item.case_discount)}</span>
                         )}
                         <span>Unit cost: {formatCurrency(unitCost)}</span>
                         <span>Retail: {formatCurrency(item.unit_retail)}</span>
@@ -322,6 +323,10 @@ function ItemFormFields({
           required
           placeholder="012345678901"
           inputMode="numeric"
+          onBlur={(e) => {
+            const completed = completeUpc(e.target.value);
+            if (completed !== e.target.value) e.target.value = completed;
+          }}
         />
       </div>
       <div className="space-y-2">
@@ -355,17 +360,16 @@ function ItemFormFields({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="case_discount">Discount %</Label>
+        <Label htmlFor="case_discount">Discount $</Label>
         <Input
           id="case_discount"
           name="case_discount"
           type="number"
           step="0.01"
           min="0"
-          max="100"
           value={caseDiscount || ""}
           onChange={(e) => setCaseDiscount(parseFloat(e.target.value) || 0)}
-          placeholder="0"
+          placeholder="0.00"
           inputMode="decimal"
         />
       </div>

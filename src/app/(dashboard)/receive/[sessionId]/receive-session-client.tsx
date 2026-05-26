@@ -33,6 +33,7 @@ import { lookupItemByUpc } from "@/app/actions/items";
 import { toast } from "@/components/ui/use-toast";
 import { calcMargin, calcUnitCost } from "@/lib/margin";
 import { formatCurrency } from "@/lib/utils";
+import { completeUpc } from "@/lib/upc";
 import type { ReceiveSession, ReceiveLine, Item, Department } from "@/types/database";
 
 type ItemWithDept = Item & { departments: Department | null };
@@ -96,7 +97,7 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
   );
 
   async function processUpc(upc: string) {
-    const item = await lookupItemByUpc(upc);
+    const item = await lookupItemByUpc(completeUpc(upc));
     if (item) {
       setFoundItem(item as unknown as ItemWithDept);
       setAddLineOpen(true);
@@ -353,7 +354,7 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
                           Cost: {formatCurrency(effectiveCost)}
                         </span>
                         {effectiveDiscount > 0 && (
-                          <span>Disc: {effectiveDiscount}%</span>
+                          <span>Disc: {formatCurrency(effectiveDiscount)}</span>
                         )}
                         <span>Unit: {formatCurrency(unitCost)}</span>
                         <span>Retail: {formatCurrency(item.unit_retail)}</span>
@@ -458,9 +459,9 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="case_discount_override">
-                  Discount % Override{" "}
+                  Discount $ Override{" "}
                   <span className="text-muted-foreground font-normal">
-                    (leave blank to keep {foundItem.case_discount}%)
+                    (leave blank to keep {formatCurrency(foundItem.case_discount)})
                   </span>
                 </Label>
                 <Input
@@ -469,7 +470,6 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
                   type="number"
                   step="0.01"
                   min="0"
-                  max="100"
                   placeholder={foundItem.case_discount.toString()}
                   inputMode="decimal"
                 />
@@ -530,14 +530,13 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit_discount">Discount % Override</Label>
+                <Label htmlFor="edit_discount">Discount $ Override</Label>
                 <Input
                   id="edit_discount"
                   name="case_discount_override"
                   type="number"
                   step="0.01"
                   min="0"
-                  max="100"
                   defaultValue={editLine.case_discount_override ?? ""}
                   placeholder={editLine.items.case_discount.toString()}
                   inputMode="decimal"
