@@ -224,11 +224,11 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
 
   const sessionTotal = lines.reduce((sum, line) => {
     const item = line.items;
-    const effectiveCaseCost =
-      (line.case_cost_override ?? item.case_cost) -
-      (line.case_discount_override ?? item.case_discount);
+    const grossCost = line.case_cost_override ?? item.case_cost;
+    const discount = line.case_discount_override ?? item.case_discount;
     const depositPerCase = item.case_size * (item.bottle_deposit ?? 0);
-    return sum + line.cases_received * (effectiveCaseCost + depositPerCase);
+    const netCaseCost = grossCost - discount + depositPerCase;
+    return sum + line.cases_received * netCaseCost;
   }, 0);
 
   const totalCases = lines.reduce((sum, l) => sum + l.cases_received, 0);
@@ -361,6 +361,9 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
             const diff = margin - targetMargin;
             const badgeVariant =
               diff >= 0 ? "success" : diff >= -5 ? "warning" : "destructive";
+            const deposit = item.bottle_deposit ?? 0;
+            const netCaseCost = effectiveCost - effectiveDiscount + item.case_size * deposit;
+            const lineTotal = line.cases_received * netCaseCost;
             const costChanged = line.case_cost_override !== null;
 
             return (
@@ -383,18 +386,18 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
                         )}
                       </div>
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-sm text-muted-foreground">
-                        <span>
-                          {line.cases_received} case{line.cases_received !== 1 ? "s" : ""}
-                        </span>
                         <span>Cost: {formatCurrency(effectiveCost)}</span>
                         {effectiveDiscount > 0 && (
                           <span>Disc: {formatCurrency(effectiveDiscount)}</span>
                         )}
+                        {deposit > 0 && (
+                          <span>Dep: {formatCurrency(item.case_size * deposit)}/case</span>
+                        )}
                         <span>Unit: {formatCurrency(unitCost)}</span>
                         <span>Retail: {formatCurrency(item.unit_retail)}</span>
-                        {(item.bottle_deposit ?? 0) > 0 && (
-                          <span>Dep: {formatCurrency(item.bottle_deposit ?? 0)}</span>
-                        )}
+                      </div>
+                      <div className="flex items-center gap-1 mt-1 text-sm font-medium">
+                        <span>{line.cases_received} case{line.cases_received !== 1 ? "s" : ""} × {formatCurrency(netCaseCost)} = {formatCurrency(lineTotal)}</span>
                       </div>
                       <div className="mt-2">
                         <UpcBarcode upc={item.upc} />
