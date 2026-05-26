@@ -1,17 +1,16 @@
 /**
- * Appends the GS1 check digit to an 11-digit (UPC-A) or 12-digit (EAN-13) string.
- * Returns the input unchanged for any other length or non-numeric input.
+ * Appends the UPC-A check digit to an 11-digit string.
+ * A complete UPC-A (12 digits) or EAN-13 (13 digits) is returned unchanged.
+ * Any other length or non-numeric input is returned unchanged.
  */
 export function completeUpc(digits: string): string {
   const trimmed = digits.trim();
   if (!/^\d+$/.test(trimmed)) return trimmed;
-  const n = trimmed.length;
-  if (n !== 11 && n !== 12) return trimmed;
+  if (trimmed.length !== 11) return trimmed;
 
-  const [oddMult, evenMult] = n === 11 ? [3, 1] : [1, 3];
   let sum = 0;
-  for (let i = 0; i < n; i++) {
-    sum += parseInt(trimmed[i]) * (i % 2 === 0 ? oddMult : evenMult);
+  for (let i = 0; i < 11; i++) {
+    sum += parseInt(trimmed[i]) * (i % 2 === 0 ? 3 : 1);
   }
   return trimmed + ((10 - (sum % 10)) % 10).toString();
 }
