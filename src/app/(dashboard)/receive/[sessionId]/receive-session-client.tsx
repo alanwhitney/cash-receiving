@@ -21,6 +21,7 @@ import {
   Trash2,
   Pencil,
   CheckCircle,
+  XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -28,6 +29,7 @@ import {
   updateReceiveLine,
   removeReceiveLine,
   completeSession,
+  deleteSession,
 } from "@/app/actions/receive";
 import { lookupItemByUpc } from "@/app/actions/items";
 import { toast } from "@/components/ui/use-toast";
@@ -57,6 +59,7 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
   const [addLineOpen, setAddLineOpen] = useState(false);
   const [editLine, setEditLine] = useState<LineWithItem | null>(null);
   const [completeOpen, setCompleteOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [applyPrices, setApplyPrices] = useState(true);
   const [loading, setLoading] = useState(false);
 
@@ -185,6 +188,17 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
     }
   }
 
+  async function handleDelete() {
+    setLoading(true);
+    const result = await deleteSession(session.id);
+    setLoading(false);
+    if (result.error) {
+      toast({ variant: "destructive", title: "Error", description: result.error });
+    } else {
+      router.push("/receive");
+    }
+  }
+
   async function handleComplete() {
     setLoading(true);
     const result = await completeSession(session.id, applyPrices);
@@ -227,6 +241,17 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
         <Badge variant={isCompleted ? "secondary" : "warning"}>
           {isCompleted ? "Completed" : "Open"}
         </Badge>
+        {!isCompleted && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive"
+            onClick={() => setDeleteOpen(true)}
+            title="Delete session"
+          >
+            <XCircle className="h-5 w-5" />
+          </Button>
+        )}
       </div>
 
       {/* Scan area */}
@@ -552,6 +577,28 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
               </DialogFooter>
             </form>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete session dialog */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete session?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            This will permanently delete this receiving session and all{" "}
+            {lines.length > 0 && <strong>{lines.length} scanned line{lines.length !== 1 ? "s" : ""}. </strong>}
+            No item costs will be changed.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={loading}>
+              {loading ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

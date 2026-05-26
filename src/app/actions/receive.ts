@@ -117,6 +117,36 @@ export async function removeReceiveLine(lineId: string, sessionId: string) {
   return { success: true };
 }
 
+export async function deleteSession(sessionId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  // Verify ownership and that the session is still open
+  const { data: session } = await supabase
+    .from("receive_sessions")
+    .select("id, status")
+    .eq("id", sessionId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!session) return { error: "Session not found" };
+  if (session.status === "completed") return { error: "Cannot delete a completed session" };
+
+  // Delete lines first in case there's no CASCADE
+  await supabase.from("receive_lines").delete().eq("session_id", sessionId);
+
+  const { error } = await supabase
+    .from("receive_sessions")
+    .delete()
+    .eq("id", sessionId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/receive");
+  return { success: true };
+}
+
 export async function completeSession(sessionId: string, applyPriceChanges: boolean) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
