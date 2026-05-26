@@ -226,9 +226,8 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
     const item = line.items;
     const grossCost = line.case_cost_override ?? item.case_cost;
     const discount = line.case_discount_override ?? item.case_discount;
-    const depositPerCase = item.case_size * (item.bottle_deposit ?? 0);
-    const netCaseCost = grossCost - discount + depositPerCase;
-    return sum + line.cases_received * netCaseCost;
+    const deposit = item.bottle_deposit ?? 0;
+    return sum + line.cases_received * (grossCost + deposit - discount);
   }, 0);
 
   const totalCases = lines.reduce((sum, l) => sum + l.cases_received, 0);
@@ -362,7 +361,7 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
             const badgeVariant =
               diff >= 0 ? "success" : diff >= -5 ? "warning" : "destructive";
             const deposit = item.bottle_deposit ?? 0;
-            const netCaseCost = effectiveCost - effectiveDiscount + item.case_size * deposit;
+            const netCaseCost = effectiveCost + deposit - effectiveDiscount;
             const lineTotal = line.cases_received * netCaseCost;
             const costChanged = line.case_cost_override !== null;
 
@@ -391,7 +390,7 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
                           <span>Disc: {formatCurrency(effectiveDiscount)}</span>
                         )}
                         {deposit > 0 && (
-                          <span>Dep: {formatCurrency(item.case_size * deposit)}/case</span>
+                          <span>Dep: {formatCurrency(deposit)}</span>
                         )}
                         <span>Unit: {formatCurrency(unitCost)}</span>
                         <span>Retail: {formatCurrency(item.unit_retail)}</span>

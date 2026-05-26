@@ -187,7 +187,7 @@ export function ItemsTab({
                         )}
                         <span>Unit cost: {formatCurrency(unitCost)}</span>
                         <span>Retail: {formatCurrency(item.unit_retail)}</span>
-                        {item.bottle_deposit > 0 && (
+                        {(item.bottle_deposit ?? 0) > 0 && (
                           <span>Dep: {formatCurrency(item.bottle_deposit)}</span>
                         )}
                       </div>
