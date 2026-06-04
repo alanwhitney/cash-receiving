@@ -31,7 +31,8 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  if (!user && !pathname.startsWith("/login")) {
+  const publicPaths = ["/login", "/forgot-password", "/reset-password", "/auth/callback"];
+  if (!user && !publicPaths.some((p) => pathname.startsWith(p))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

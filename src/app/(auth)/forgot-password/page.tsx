@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn, signUp } from "./actions";
+import { requestPasswordReset } from "../login/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,8 +16,7 @@ import {
 import { PackageCheck } from "lucide-react";
 import Link from "next/link";
 
-export default function LoginPage() {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -27,16 +26,10 @@ export default function LoginPage() {
     setError(null);
     setSuccess(null);
     setLoading(true);
-
-    const formData = new FormData(e.currentTarget);
-
-    const result =
-      mode === "signin" ? await signIn(formData) : await signUp(formData);
-
+    const result = await requestPasswordReset(new FormData(e.currentTarget)) as { error?: string; success?: string };
     setLoading(false);
-
-    if (result && "error" in result) setError(result.error ?? "Unknown error");
-    if (result && "success" in result) setSuccess(result.success ?? "");
+    if (result?.error) setError(result.error);
+    if (result?.success) setSuccess(result.success);
   }
 
   return (
@@ -46,13 +39,9 @@ export default function LoginPage() {
           <PackageCheck className="h-6 w-6 text-primary" />
           <span className="text-xl font-bold">Cash Receiving</span>
         </div>
-        <CardTitle className="text-2xl">
-          {mode === "signin" ? "Sign in" : "Create account"}
-        </CardTitle>
+        <CardTitle className="text-2xl">Reset password</CardTitle>
         <CardDescription>
-          {mode === "signin"
-            ? "Enter your credentials to access your account"
-            : "Create a new account to get started"}
+          Enter your email and we'll send you a reset link.
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
@@ -66,19 +55,7 @@ export default function LoginPage() {
               placeholder="you@example.com"
               required
               autoComplete="email"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete={
-                mode === "signin" ? "current-password" : "new-password"
-              }
-              minLength={6}
+              autoFocus
             />
           </div>
           {error && (
@@ -94,31 +71,13 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col gap-3">
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading
-              ? "Please wait..."
-              : mode === "signin"
-              ? "Sign in"
-              : "Create account"}
+            {loading ? "Sending..." : "Send reset link"}
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full text-sm"
-            onClick={() => {
-              setMode(mode === "signin" ? "signup" : "signin");
-              setError(null);
-              setSuccess(null);
-            }}
-          >
-            {mode === "signin"
-              ? "Don't have an account? Sign up"
-              : "Already have an account? Sign in"}
-          </Button>
-          {mode === "signin" && (
-            <Link href="/forgot-password" className="text-sm text-muted-foreground hover:underline">
-              Forgot password?
-            </Link>
-          )}
+          <Link href="/login" className="w-full">
+            <Button type="button" variant="ghost" className="w-full text-sm">
+              Back to sign in
+            </Button>
+          </Link>
         </CardFooter>
       </form>
     </Card>
