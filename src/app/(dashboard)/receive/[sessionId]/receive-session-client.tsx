@@ -230,6 +230,21 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
     return sum + line.cases_received * (grossCost + deposit - discount);
   }, 0);
 
+  const sessionRetail = lines.reduce((sum, line) => {
+    return sum + line.cases_received * line.items.case_size * line.items.unit_retail;
+  }, 0);
+
+  const sessionMarginCost = lines.reduce((sum, line) => {
+    const item = line.items;
+    const grossCost = line.case_cost_override ?? item.case_cost;
+    const discount = line.case_discount_override ?? item.case_discount;
+    return sum + line.cases_received * (grossCost - discount);
+  }, 0);
+
+  const sessionMargin = sessionRetail > 0
+    ? ((sessionRetail - sessionMarginCost) / sessionRetail) * 100
+    : 0;
+
   const totalCases = lines.reduce((sum, l) => sum + l.cases_received, 0);
 
   return (
@@ -433,13 +448,19 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
       {/* Session total */}
       {lines.length > 0 && (
         <Card className="mb-4">
-          <CardContent className="p-4 flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              {lines.length} item{lines.length !== 1 ? "s" : ""} · {totalCases} case{totalCases !== 1 ? "s" : ""}
-            </span>
-            <span className="text-lg font-semibold">
-              Total: {formatCurrency(sessionTotal)}
-            </span>
+          <CardContent className="p-4 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                {lines.length} item{lines.length !== 1 ? "s" : ""} · {totalCases} case{totalCases !== 1 ? "s" : ""}
+              </span>
+              <span className="text-lg font-semibold">
+                Cost: {formatCurrency(sessionTotal)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>Retail: {formatCurrency(sessionRetail)}</span>
+              <span>Margin: {sessionMargin.toFixed(1)}%</span>
+            </div>
           </CardContent>
         </Card>
       )}
