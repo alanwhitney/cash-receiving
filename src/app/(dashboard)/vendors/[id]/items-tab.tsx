@@ -314,13 +314,13 @@ function ItemFormFields({
   defaults?: Item;
 }) {
   const [caseCost, setCaseCost] = useState(defaults?.case_cost ?? 0);
-  const [caseSize, setCaseSize] = useState(defaults?.case_size ?? 1);
+  const [caseSize, setCaseSize] = useState<number | "">(defaults?.case_size ?? "");
   const [caseDiscount, setCaseDiscount] = useState(defaults?.case_discount ?? 0);
   const [unitRetail, setUnitRetail] = useState(defaults?.unit_retail ?? 0);
   const [bottleDeposit, setBottleDeposit] = useState(defaults?.bottle_deposit ?? 0);
   const [departmentId, setDepartmentId] = useState(defaults?.department_id ?? NO_DEPT);
 
-  const previewMargin = calcMargin({ caseCost, caseSize, caseDiscount, unitRetail });
+  const previewMargin = calcMargin({ caseCost, caseSize: caseSize || 0, caseDiscount, unitRetail });
 
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -373,7 +373,7 @@ function ItemFormFields({
           min="1"
           step="1"
           value={caseSize || ""}
-          onChange={(e) => setCaseSize(parseInt(e.target.value) || 1)}
+          onChange={(e) => setCaseSize(e.target.value === "" ? "" : parseInt(e.target.value) || "")}
           required
           placeholder="12"
           inputMode="numeric"
