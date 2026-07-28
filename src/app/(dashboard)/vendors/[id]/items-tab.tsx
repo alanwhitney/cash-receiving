@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, Package, Pencil, Trash2, History, Barcode } from "lucide-react";
 import { createItem, updateItem, deleteItem } from "@/app/actions/items";
+import { lookupPosCatalogByUpc } from "@/app/actions/pos-catalog";
 import { toast } from "@/components/ui/use-toast";
 import { calcMargin, calcUnitCost } from "@/lib/margin";
 import { formatCurrency } from "@/lib/utils";
@@ -343,9 +344,21 @@ function ItemFormFields({
           required
           placeholder="012345678901"
           inputMode="numeric"
-          onBlur={(e) => {
-            const completed = completeUpc(e.target.value);
+          onBlur={async (e) => {
+            const completed = completeUpc(e.target.value.trim());
             if (completed !== e.target.value) e.target.value = completed;
+
+            if (defaults) return; // don't overwrite values while editing
+            if (!/^\d{12,13}$/.test(completed)) return;
+
+            const form = e.currentTarget.form;
+            const nameInput = form?.elements.namedItem("name") as HTMLInputElement | null;
+            if (nameInput?.value.trim()) return; // name already filled in
+
+            const match = await lookupPosCatalogByUpc(completed);
+            if (!match) return;
+            if (nameInput && !nameInput.value.trim()) nameInput.value = match.description;
+            if (match.price != null) setUnitRetail(match.price);
           }}
         />
       </div>

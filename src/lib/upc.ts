@@ -14,3 +14,18 @@ export function completeUpc(digits: string): string {
   }
   return trimmed + ((10 - (sum % 10)) % 10).toString();
 }
+
+/**
+ * Reconstructs a full UPC-A from a POS PLU number that has had its leading
+ * zero and check digit stripped. A 10-digit PLU is missing the leading system
+ * digit (0) and the check digit; an 11-digit PLU already has a non-zero
+ * system digit and is only missing the check digit. Anything else (produce
+ * PLUs, department codes, etc.) isn't a derivable UPC and returns null.
+ */
+export function upcFromPlu(plu: string): string | null {
+  const trimmed = plu.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  if (trimmed.length === 10) return completeUpc("0" + trimmed);
+  if (trimmed.length === 11) return completeUpc(trimmed);
+  return null;
+}

@@ -243,6 +243,36 @@ export interface Database {
         };
         Relationships: [];
       };
+      pos_catalog: {
+        Row: {
+          id: string;
+          user_id: string;
+          plu: string;
+          upc: string | null;
+          description: string;
+          price: number | null;
+          imported_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          plu: string;
+          upc?: string | null;
+          description: string;
+          price?: number | null;
+          imported_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          plu?: string;
+          upc?: string | null;
+          description?: string;
+          price?: number | null;
+          imported_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: { [_ in never]: never };
     Functions: { [_ in never]: never };
@@ -261,6 +291,8 @@ export type ReceiveSession =
   Database["public"]["Tables"]["receive_sessions"]["Row"];
 export type ReceiveLine =
   Database["public"]["Tables"]["receive_lines"]["Row"];
+export type PosCatalogEntry =
+  Database["public"]["Tables"]["pos_catalog"]["Row"];
 
 export type ItemWithDepartment = Item & {
   departments: Department | null;

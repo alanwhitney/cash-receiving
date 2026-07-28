@@ -8,6 +8,7 @@ import {
   Store,
   LayoutGrid,
   PackagePlus,
+  Database,
   LogOut,
 } from "lucide-react";
 import { signOut } from "@/app/(auth)/login/actions";
@@ -17,6 +18,7 @@ const navItems = [
   { href: "/receive", label: "Receive", icon: PackagePlus },
   { href: "/vendors", label: "Vendors", icon: Store },
   { href: "/departments", label: "Departments", icon: LayoutGrid },
+  { href: "/pos-catalog", label: "POS Catalog", icon: Database },
 ];
 
 export function AppNav() {
