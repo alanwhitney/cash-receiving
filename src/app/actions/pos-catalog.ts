@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { parseCsvLine } from "@/lib/csv";
 import { upcFromPlu } from "@/lib/upc";
 
-const BATCH_SIZE = 500;
+const BATCH_SIZE = 2000;
+const BATCH_CONCURRENCY = 4;
 
 export async function importPosCatalog(formData: FormData) {
   const supabase = await createClient();
@@ -50,12 +51,20 @@ export async function importPosCatalog(formData: FormData) {
 
   if (rows.length === 0) return { error: "No valid rows found in file" };
 
+  const batches: Row[][] = [];
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-    const batch = rows.slice(i, i + BATCH_SIZE);
-    const { error } = await supabase
-      .from("pos_catalog")
-      .upsert(batch, { onConflict: "user_id,plu" });
-    if (error) return { error: error.message };
+    batches.push(rows.slice(i, i + BATCH_SIZE));
+  }
+
+  for (let i = 0; i < batches.length; i += BATCH_CONCURRENCY) {
+    const group = batches.slice(i, i + BATCH_CONCURRENCY);
+    const results = await Promise.all(
+      group.map((batch) =>
+        supabase.from("pos_catalog").upsert(batch, { onConflict: "user_id,plu" })
+      )
+    );
+    const failed = results.find((r) => r.error);
+    if (failed?.error) return { error: failed.error.message };
   }
 
   revalidatePath("/pos-catalog");

@@ -2,6 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { PosCatalogClient } from "./pos-catalog-client";
 
+// Importing a full POS export is thousands of rows and can take longer
+// than the platform's default serverless timeout.
+export const maxDuration = 60;
+
 export default async function PosCatalogPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
