@@ -27,28 +27,46 @@ export function PosCatalogClient({
       return;
     }
     setLoading(true);
-    const result = await importPosCatalog(formData);
-    setLoading(false);
-    if ("error" in result) {
-      toast({ variant: "destructive", title: "Import failed", description: result.error });
-    } else {
+    try {
+      const result = await importPosCatalog(formData);
+      if ("error" in result) {
+        toast({ variant: "destructive", title: "Import failed", description: result.error });
+      } else {
+        toast({
+          title: "Catalog imported",
+          description: `${result.imported} rows imported, ${result.withUpc} matched to a UPC`,
+        });
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    } catch (err) {
       toast({
-        title: "Catalog imported",
-        description: `${result.imported} rows imported, ${result.withUpc} matched to a UPC`,
+        variant: "destructive",
+        title: "Import failed",
+        description: err instanceof Error ? err.message : "Unexpected error",
       });
-      if (fileInputRef.current) fileInputRef.current.value = "";
+    } finally {
+      setLoading(false);
     }
   }
 
   async function handleClear() {
     if (!confirm("Remove all imported POS catalog data?")) return;
     setClearing(true);
-    const result = await clearPosCatalog();
-    setClearing(false);
-    if (result?.error) {
-      toast({ variant: "destructive", title: "Error", description: result.error });
-    } else {
-      toast({ title: "Catalog cleared" });
+    try {
+      const result = await clearPosCatalog();
+      if (result?.error) {
+        toast({ variant: "destructive", title: "Error", description: result.error });
+      } else {
+        toast({ title: "Catalog cleared" });
+      }
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: err instanceof Error ? err.message : "Unexpected error",
+      });
+    } finally {
+      setClearing(false);
     }
   }
 
