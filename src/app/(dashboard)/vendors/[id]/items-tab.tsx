@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Package, Pencil, Trash2, History, Barcode } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, History, Barcode, X } from "lucide-react";
 import { createItem, updateItem, deleteItem } from "@/app/actions/items";
 import { lookupPosCatalogByUpc } from "@/app/actions/pos-catalog";
 import { toast } from "@/components/ui/use-toast";
@@ -122,12 +122,24 @@ export function ItemsTab({
   return (
     <div className="mt-4">
       <div className="flex gap-2 mb-3">
-        <Input
-          placeholder="Search by name or UPC..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1"
-        />
+        <div className="relative flex-1">
+          <Input
+            placeholder="Search by name or UPC..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pr-8"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
         <Button
           size="sm"
           variant={showBarcodes ? "secondary" : "outline"}
