@@ -3,18 +3,28 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ChevronRight, PackagePlus } from "lucide-react";
+import { ChevronLeft, ChevronRight, PackagePlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { StartSessionClient } from "./start-session-client";
 import type { ReceiveSession } from "@/types/database";
 
 type SessionWithVendor = ReceiveSession & { vendors: { name: string } };
 
-export default async function ReceivePage() {
+const PAGE_SIZE = 20;
+
+export default async function ReceivePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: vendors }, { data: sessions }] = await Promise.all([
+  const page = Math.max(1, Math.floor(Number((await searchParams).page)) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+
+  const [{ data: vendors }, { data: openData }, { data: completedData, count }] = await Promise.all([
     supabase
       .from("vendors")
       .select("id, name")
@@ -24,13 +34,25 @@ export default async function ReceivePage() {
       .from("receive_sessions")
       .select("*, vendors(name)")
       .eq("user_id", user.id)
+      .eq("status", "open")
+      .order("created_at", { ascending: false }) as unknown as Promise<{ data: SessionWithVendor[] | null }>,
+    supabase
+      .from("receive_sessions")
+      .select("*, vendors(name)", { count: "exact" })
+      .eq("user_id", user.id)
+      .eq("status", "completed")
+      .order("completed_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
-      .limit(20) as unknown as Promise<{ data: SessionWithVendor[] | null }>,
+      .range(from, from + PAGE_SIZE - 1) as unknown as Promise<{
+      data: SessionWithVendor[] | null;
+      count: number | null;
+    }>,
   ]);
 
-  const openSessions = sessions?.filter((s) => s.status === "open") ?? [];
-  const recentCompleted =
-    sessions?.filter((s) => s.status === "completed").slice(0, 5) ?? [];
+  const openSessions = openData ?? [];
+  const completedSessions = completedData ?? [];
+  const totalCompleted = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCompleted / PAGE_SIZE));
 
   return (
     <div className="p-4 md:p-6 max-w-2xl mx-auto">
@@ -70,13 +92,20 @@ export default async function ReceivePage() {
         </section>
       )}
 
-      {recentCompleted.length > 0 && (
+      {totalCompleted > 0 && (
         <section>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-            Recent
+            Completed
+            <span className="ml-2 font-normal normal-case">({totalCompleted})</span>
           </h2>
           <div className="space-y-2">
-            {recentCompleted.map((session) => (
+            {completedSessions.length === 0 && (
+              <p className="text-sm text-muted-foreground py-4">
+                No sessions on this page.{" "}
+                <Link href="/receive" className="underline">Back to newest</Link>
+              </p>
+            )}
+            {completedSessions.map((session) => (
               <Link key={session.id} href={`/receive/${session.id}`}>
                 <Card className="hover:border-primary/50 transition-colors cursor-pointer opacity-70">
                   <CardContent className="flex items-center justify-between p-4">
@@ -99,10 +128,39 @@ export default async function ReceivePage() {
               </Link>
             ))}
           </div>
+          {totalPages > 1 && (
+            <nav className="flex items-center justify-between mt-4" aria-label="Completed sessions pages">
+              {page > 1 ? (
+                <Button asChild variant="outline" size="sm">
+                  <Link href={page === 2 ? "/receive" : `/receive?page=${page - 1}`}>
+                    <ChevronLeft /> Newer
+                  </Link>
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" disabled>
+                  <ChevronLeft /> Newer
+                </Button>
+              )}
+              <span className="text-sm text-muted-foreground">
+                Page {page} of {totalPages}
+              </span>
+              {page < totalPages ? (
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/receive?page=${page + 1}`}>
+                    Older <ChevronRight />
+                  </Link>
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" disabled>
+                  Older <ChevronRight />
+                </Button>
+              )}
+            </nav>
+          )}
         </section>
       )}
 
-      {openSessions.length === 0 && recentCompleted.length === 0 && (
+      {openSessions.length === 0 && totalCompleted === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <PackagePlus className="h-12 w-12 text-muted-foreground mb-3" />
