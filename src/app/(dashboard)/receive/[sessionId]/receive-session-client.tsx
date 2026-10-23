@@ -415,6 +415,9 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
                       </div>
                       <div className="mt-2">
                         <UpcBarcode upc={item.upc} />
+                        <p className="mt-0.5 font-mono text-xs tracking-wider text-muted-foreground">
+                          {item.upc}
+                        </p>
                       </div>
                     </div>
                     {!isCompleted && (
