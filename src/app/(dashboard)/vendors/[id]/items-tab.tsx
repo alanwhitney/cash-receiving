@@ -338,16 +338,6 @@ function ItemFormFields({
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="col-span-2 space-y-2">
-        <Label htmlFor="name">Name *</Label>
-        <Input
-          id="name"
-          name="name"
-          defaultValue={defaults?.name}
-          required
-          placeholder="Product name"
-        />
-      </div>
-      <div className="col-span-2 space-y-2">
         <Label htmlFor="upc">UPC *</Label>
         <Input
           id="upc"
@@ -372,6 +362,16 @@ function ItemFormFields({
             if (nameInput && !nameInput.value.trim()) nameInput.value = match.description;
             if (match.price != null) setUnitRetail(match.price);
           }}
+        />
+      </div>
+      <div className="col-span-2 space-y-2">
+        <Label htmlFor="name">Name *</Label>
+        <Input
+          id="name"
+          name="name"
+          defaultValue={defaults?.name}
+          required
+          placeholder="Product name"
         />
       </div>
       <div className="space-y-2">
