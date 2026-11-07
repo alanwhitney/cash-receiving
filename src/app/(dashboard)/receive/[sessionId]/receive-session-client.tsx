@@ -230,6 +230,12 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
     return sum + line.cases_received * (grossCost + deposit - discount);
   }, 0);
 
+  const sessionDeposit = lines.reduce((sum, line) => {
+    return sum + line.cases_received * (line.items.bottle_deposit ?? 0);
+  }, 0);
+
+  const sessionCogs = sessionTotal - sessionDeposit;
+
   const sessionRetail = lines.reduce((sum, line) => {
     return sum + line.cases_received * line.items.case_size * line.items.unit_retail;
   }, 0);
@@ -459,6 +465,10 @@ export function ReceiveSessionClient({ session, initialLines }: Props) {
               <span className="text-lg font-semibold">
                 Cost: {formatCurrency(sessionTotal)}
               </span>
+            </div>
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>Deposit: {formatCurrency(sessionDeposit)}</span>
+              <span>COGS: {formatCurrency(sessionCogs)}</span>
             </div>
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>Retail: {formatCurrency(sessionRetail)}</span>
